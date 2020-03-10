@@ -1,0 +1,35 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    data-namespace-typo3-fluid="true">
+
+<f:be.pageRenderer
+    includeRequireJsModules="{
+        0: 'TYPO3/CMS/Backend/ContextMenu',
+        1: 'TYPO3/CMS/Backend/AjaxDataHandler',
+        10: 'TYPO3/CMS/Backend/Modal',
+        20: 'TYPO3/CMS/Backend/ContextHelp'
+    }"
+
+    includeCssFiles="{
+        0: '{f:uri.resource(path:\'Css/Module/provider.min.css\')}'
+    }"
+
+    includeJsFiles="{
+        0: '{f:uri.resource(path:\'JavaScript/Module/provider.min.js\')}'
+    }"
+/>
+
+<script><f:format.raw>{script}</f:format.raw></script>
+
+<f:render partial="Backend/ModuleMenu" arguments="{settings: settings, menuIndex: 'index'}" />
+
+<f:flashMessages />
+
+<div class="tx-ext-hh-module module-provider">
+    <f:render section="content" />
+
+    <f:render partial="Backend/ModuleFooter" arguments="{_all}" />
+</div>
+
+</html>

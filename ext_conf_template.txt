@@ -1,0 +1,16 @@
+# cat=basic/enable; type=options[jwt=1]; label=Accessmethod (e. g. url query params or jwt-token)
+accessMethod =
+
+jwt {
+    # cat=basic/enable; type=string; label=Issuer for JWT-Token
+    iss =
+
+    # cat=basic/enable; type=string; label=Api-Key for JWT-Token
+    apiKey =
+
+    # cat=basic/enable; type=string; label=Secret for JWT-Token
+    secret =
+
+    # cat=basic/enable; type=user[GroundStack\GsMonitorProvider\Constants\CustomFields->commentField]
+    customComment = (the secret must be at least 12 characters in length; contain numbers; upper and lowercase letters; and one of the following special characters *&!@%^#$)
+}

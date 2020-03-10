@@ -1,0 +1,57 @@
+.f3-widget-paginator {
+  background-color: #EEE;
+  display: inline-block;
+  border-radius: 4px;
+  margin: 0;
+  padding-left: 0;
+  width: 100%; }
+
+.f3-widget-paginator > li {
+  display: inline-block; }
+
+.f3-widget-paginator > li > a,
+.f3-widget-paginator > li.current {
+  position: relative;
+  padding: 6px 12px;
+  margin-left: -1px;
+  text-decoration: none;
+  background-color: #EEE;
+  color: #FF8700; }
+
+.f3-widget-paginator > li.current,
+.f3-widget-paginator > li > a:hover,
+.f3-widget-paginator > li > a:focus {
+  text-decoration: underline;
+  background-color: #FFF; }
+
+.f3-widget-paginator > li:first-child > a,
+.f3-widget-paginator > li.current:first-child {
+  margin-left: 0; }
+
+.menu-module ul {
+  list-style: none; }
+
+.tx-hh-ext-cure .table .col-responsive {
+  max-width: 100%; }
+
+.tx-hh-ext-cure .table .col-title {
+  width: 200px; }
+
+.tx-hh-ext-cure .content {
+  border-left: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  padding: 10px; }
+  .tx-hh-ext-cure .content > h1:first-child {
+    padding-top: 20px; }
+
+.tx-hh-ext-cure footer .created .logo {
+  display: block;
+  margin-top: -2em;
+  margin-left: 1em;
+  max-width: 200px; }
+  .tx-hh-ext-cure footer .created .logo img {
+    height: auto;
+    max-width: 100%; }
+
+/*# sourceMappingURL=../sourcemaps/Module/cures.css.map */

@@ -1,0 +1,14 @@
+### Module configuration
+module.tx_providermodule {
+    persistence {
+        storagePid = {$module.tx_providermodule.persistence.storagePid}
+    }
+    view {
+        templateRootPaths.0 = EXT:gs_monitor_provider/Resources/Private/Templates/
+        templateRootPaths.1 = {$module.tx_providermodule.view.templateRootPath}
+        partialRootPaths.0 = EXT:gs_monitor_provider/Resources/Private/Partials/
+        partialRootPaths.1 = {$module.tx_providermodule.view.partialRootPath}
+        layoutRootPaths.0 = EXT:gs_monitor_provider/Resources/Private/Layouts/
+        layoutRootPaths.1 = {$module.tx_providermodule.view.layoutRootPath}
+    }
+}

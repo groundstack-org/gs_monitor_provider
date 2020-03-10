@@ -1,0 +1,42 @@
+{
+    "name": "groundstack/gs-monitor-provider",
+    "type": "typo3-cms-extension",
+    "description": "GroundStack - Monitor Provider",
+    "authors": [
+        {
+            "name": "Christian Hackl",
+            "email": "info@groundstack.de",
+            "homepage": "http://groundstack.de",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/groundstack-org/gs_monitor_provider/issues",
+        "source": "https://github.com/groundstack-org/gs_monitor_provider",
+        "docs": "https://github.com/groundstack-org/gs_monitor_provider/blob/master/README.md"
+    },
+    "version": "0.1.0",
+    "license": ["GPL-2.0-or-later"],
+    "keywords": [
+        "TYPO3 CMS",
+        "extension",
+        "groundstack"
+    ],
+    "replace": {
+        "groundstack/gs_monitor_provider": "self.version",
+        "typo3-ter/gs-monitor-provider": "self.version"
+    },
+    "require": {
+        "typo3/cms-core": ">=8.7.0 <=10.3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "GroundStack\\GsMonitorProvider\\": "Classes"
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "gs_monitor_provider"
+        }
+    }
+}

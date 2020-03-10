@@ -1,0 +1,17 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    data-namespace-typo3-fluid="true">
+
+<div class="menu menu-module" role="tabpanel">
+    <ul class="nav nav-tabs t3js-tabs" role="tablist" id="tabs-tab" data-store-last-tab="1">
+        <li role="presentation" class="t3js-tabmenu-item {f:if(condition: '{menuIndex} == index', then: 'active')}">
+            <f:be.link class="btn btn-default" route="web_GsMonitorObserverObservermodule" parameters="{tx_gsmonitorobserver_web_gsmonitorobserverobservermodule: {listType: 'index', action: 'index', controller: 'Backend\ObserverModule'}}">
+                Overview
+            </f:be.link>
+        </li>
+    </ul>
+</div>
+
+
+</html>
