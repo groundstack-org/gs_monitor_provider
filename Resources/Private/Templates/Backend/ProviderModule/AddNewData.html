@@ -1,0 +1,37 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+
+<f:layout name="Backend/Default" />
+
+<f:section name="content">
+    <h1>Insert new data</h1>
+
+    <f:flashMessages />
+
+    <div class="monitor-provider">
+        <f:if condition="{showForm} != false">
+            <f:form action="addNewData" name="newData" object="{newData}">
+                <div class="form-field">
+                    <label for="apikey">Api Key</label>
+                    <f:form.textfield id="apikey" property="apikey" value="" />
+                </div>
+
+                <div class="form-field">
+                    <label for="publickey">Public Key (given from observer)</label>
+                    <f:form.textarea id="publickey" property="publickey" rows="20" cols="50" placeholder="" />
+                </div>
+
+                <f:form.submit name="submit" value="Submit" />
+            </f:form>
+
+            <div class="pw-generator">
+                <p>
+                    New generated API-Key:
+                    <input type="input" id="results" readonly />
+                    <button id="copy-to-clipboard">Copy to clipboard</button>
+                </p>
+            </div>
+        </f:if>
+    </div>
+</f:section>
+
+</html>

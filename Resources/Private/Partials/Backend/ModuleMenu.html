@@ -6,8 +6,13 @@
 <div class="menu menu-module" role="tabpanel">
     <ul class="nav nav-tabs t3js-tabs" role="tablist" id="tabs-tab" data-store-last-tab="1">
         <li role="presentation" class="t3js-tabmenu-item {f:if(condition: '{menuIndex} == index', then: 'active')}">
-            <f:be.link class="btn btn-default" route="web_GsMonitorObserverObservermodule" parameters="{tx_gsmonitorobserver_web_gsmonitorobserverobservermodule: {listType: 'index', action: 'index', controller: 'Backend\ObserverModule'}}">
+            <f:be.link class="btn btn-default" route="web_GsMonitorProviderProvidermodule" parameters="{tx_gsmonitorprovider_web_gsmonitorproviderprovidermodule: {listType: 'index', action: 'index', controller: 'Backend\ProviderModule'}}">
                 Overview
+            </f:be.link>
+        </li>
+        <li role="presentation" class="t3js-tabmenu-item {f:if(condition: '{menuIndex} == addNewData', then: 'active')}">
+            <f:be.link class="btn btn-default" route="web_GsMonitorProviderProvidermodule" parameters="{tx_gsmonitorprovider_web_gsmonitorproviderprovidermodule: {listType: 'addNewData', action: 'addNewData', controller: 'Backend\ProviderModule'}}">
+                Insert New Domain
             </f:be.link>
         </li>
     </ul>

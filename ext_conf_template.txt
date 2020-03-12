@@ -5,9 +5,6 @@ jwt {
     # cat=basic/enable; type=string; label=Issuer for JWT-Token
     iss =
 
-    # cat=basic/enable; type=string; label=Api-Key for JWT-Token
-    apiKey =
-
     # cat=basic/enable; type=string; label=Secret for JWT-Token
     secret =
 

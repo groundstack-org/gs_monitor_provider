@@ -7,14 +7,40 @@
 
     <f:flashMessages />
 
-    <f:comment><f:debug title="fluid index template">{_all}</f:debug></f:comment>
-
     <div class="monitor-provider">
-        <f:form action="savePublicKey" addQueryString="1">
-            <label>Public Key</label>
-            <f:form.textarea name="publickey" rows="20" cols="100" placeholder="" value="{keyArray.public}" />
-            <f:form.submit name="submit" value="Save" />
-        </f:form>
+        <f:if condition="{data}">
+            <f:then>
+                <f:form action="updateData" name="updateData" object="{data}">
+                    <div class="form-field">
+                        <label>API Key</label>
+                        <f:form.textfield class="apikey" type="password" property="apikey" value="" placeholder="" />
+                    </div>
+                    <div class="form-field">
+                        <label>Public Key</label>
+                        <f:form.textarea property="publickey" rows="20" cols="100" placeholder="" value="{data.publickey}" />
+                    </div>
+                    <f:form.submit name="submit" value="Save" />
+                </f:form>
+
+                <f:form action="deleteData" name="deleteData" object="{data}">
+                    <f:form.hidden name="deleteData" value="{data}" />
+                    <f:form.submit name="submit" value="Delete" />
+                </f:form>
+
+                <div class="pw-generator">
+                    <p>
+                        New generated API-Key:
+                        <input type="input" id="results" readonly />
+                        <button id="copy-to-clipboard">Copy to clipboard</button>
+                    </p>
+                </div>
+            </f:then>
+            <f:else>
+                <div class="error">
+                    <p>No data found - please insert a new one.</p>
+                </div>
+            </f:else>
+        </f:if>
     </div>
 </f:section>
 

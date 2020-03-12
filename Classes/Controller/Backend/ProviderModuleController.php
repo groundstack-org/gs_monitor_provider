@@ -10,6 +10,8 @@ use \TYPO3\CMS\Core\Messaging\FlashMessage;
 use \TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Core\Database\RelationHandler;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use \TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
+use GroundStack\GsMonitorProvider\Domain\Repository\DataRepository;
 
 /***
  *
@@ -25,11 +27,30 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 class ProviderModuleController extends ActionController {
 
     /**
-     * @var RequestFactory
+     * Persistence Manager
+     *
+     * @var \TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager
+     * @Inject
      */
-    private $requestFactory;
+    protected $persistenceManager;
 
-    protected $extensionKey;
+    /**
+     * @var DataRepository
+     */
+    protected $dataRepository = null;
+
+    /**
+     * extensionKey
+     *
+     * @var string $extensionKey
+     */
+    protected $extensionKey = '';
+
+    /**
+     * extensionConfiguration
+     *
+     * @var [type]
+     */
     protected $extensionConfiguration;
 
     /**
@@ -53,9 +74,14 @@ class ProviderModuleController extends ActionController {
         $this->view->assign('script', 'T3_THIS_LOCATION = ' . GeneralUtility::quoteJSvalue(rawurlencode(GeneralUtility::getIndpEnv('REQUEST_URI'))) . ";");
     }
 
-    protected $extConf;
-
     public function __construct() {
+    }
+
+    /**
+     * @param DataRepository $dataRepository
+     */
+    public function injectDataRepository(DataRepository $dataRepository) {
+        $this->dataRepository = $dataRepository;
     }
 
     /**
@@ -64,34 +90,92 @@ class ProviderModuleController extends ActionController {
      * @return void
      */
     public function indexAction() {
-        $keyArray = [
-            'public' => $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['gs_monitor_provider']['publicKey']
-        ];
+        $data = $this->dataRepository->findAll()->getFirst();
 
         $this->view->assignMultiple([
-            'keyArray' => $keyArray
+            'data' => $data
         ]);
     }
 
     /**
-     * savePublicKeyAction
+     * addNewDataAction
      *
-     * @param string $publickey
+     * @param \GroundStack\GsMonitorProvider\Domain\Model\Data $newData
      * @return void
      */
-    public function savePublicKeyAction(string $publickey = '') {
-        $publicKey = trim($publickey);
+    public function addNewDataAction(\GroundStack\GsMonitorProvider\Domain\Model\Data $newData = null) {
+        $errors = [];
+        if($newData !== null) {
+            if(!empty($newData->getUid()) && !empty($newData->getPid()) ) {
+                $this->forward(
+                    'updateData',
+                    NULL,
+                    NULL,
+                    [
+                        'data' => $newData
+                    ]
+                );
+            }
+        }
 
-        // Write to LocalConfiguration.php
-        $objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
-        $configurationManager = $objectManager->get('TYPO3\\CMS\\Core\\Configuration\\ConfigurationManager');
-        $configurationManager->updateLocalConfiguration([
-            'EXTENSIONS'=> [
-                'gs_monitor_provider' => [
-                    'publicKey' => $publicKey
-                ]
-            ]
+        // Allow only one dataset
+        $dataSet = $this->dataRepository->countAll();
+        if($dataSet === 0) {
+            if(!empty($newData)) {
+                if(!empty($newData->getApikey())) {
+                    $newApiKey = trim($newData->getApikey());
+
+                    // create passwordHash
+                    $apiKeyHash = $this->createPassword($newApiKey);
+                    $newData->setApikey($apiKeyHash);
+                }
+
+                if(!empty($newData->getPublickey())) {
+                    $newPublicKey = trim($newData->getPublickey());
+                }
+
+                $this->dataRepository->add($newData);
+                $this->persistenceManager->persistAll();
+                // $this->dataRepository->update($newData);
+            }
+        }
+
+        $dataSet2 = $this->dataRepository->countAll();
+        if($dataSet2 > 0) {
+            $errors[] = 'Database entry exists already!';
+        } else {
+            $this->view->assign("showForm", true);
+        }
+
+        foreach ($errors as $key => $value) {
+            $this->addFlashMessage($value, '', \TYPO3\CMS\Core\Messaging\AbstractMessage::ERROR);
+        }
+
+        $this->view->assignMultiple([
+            'menuIndex' => 'addNewData'
         ]);
+    }
+
+    /**
+     * updateDataAction
+     *
+     * @param \GroundStack\GsMonitorProvider\Domain\Model\Data $updateData
+     * @return void
+     */
+    public function updateDataAction(\GroundStack\GsMonitorProvider\Domain\Model\Data $updateData) {
+
+        if(empty($updateData->getApikey())) {
+            $updateData->setApikey($updateData->_getCleanProperty('apikey'));
+        } else {
+            $updateData->setApikey($this->createPassword($updateData->getApikey()));
+        }
+
+        if(empty($updateData->getPublickey())) {
+            $updateData->setPublickey($updateData->_getCleanProperty('publickey'));
+        }
+
+        $this->dataRepository->update($updateData);
+        $this->persistenceManager->persistAll();
 
         $this->redirect(
             'index',
@@ -99,5 +183,37 @@ class ProviderModuleController extends ActionController {
             NULL,
             []
         );
+    }
+
+    /**
+     * deleteDataAction
+     *
+     * @param \GroundStack\GsMonitorProvider\Domain\Model\Data $deleteData
+     * @return void
+     */
+    public function deleteDataAction(\GroundStack\GsMonitorProvider\Domain\Model\Data $deleteData) {
+        $this->dataRepository->remove($deleteData);
+        $affectedRows = $this->dataRepository->removeCompletely($deleteData->getUid());
+
+        $this->addFlashMessage('Database entry deleted!', '', \TYPO3\CMS\Core\Messaging\AbstractMessage::ERROR);
+
+        $this->redirect(
+            'index',
+            NULL,
+            NULL,
+            []
+        );
+    }
+
+    /**
+     * createPassword from string, returns hashed password
+     *
+     * @param string $password - clear text password
+     * @return string
+     */
+    public function createPassword(string $password): string {
+        $hashInstance = GeneralUtility::makeInstance(PasswordHashFactory::class)->getDefaultHashInstance('FE');
+
+        return $hashInstance->getHashedPassword($password);
     }
 }

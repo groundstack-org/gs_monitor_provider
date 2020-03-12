@@ -17,7 +17,7 @@ call_user_func(function() {
             'providermodule', // Submodule key
             '', // Position
             [
-                'Backend\ProviderModule' => 'index, savePublicKey',
+                'Backend\ProviderModule' => 'index, addNewData, updateData, deleteData',
             ],
             [
                 'access' => 'systemMaintainer',
