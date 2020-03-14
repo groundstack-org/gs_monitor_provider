@@ -197,10 +197,9 @@ class MonitoringMiddleware implements MiddlewareInterface {
      */
     protected function authenticate(ServerRequestInterface $request): bool {
         $data = $this->dataRepository->findAll()->getFirst();
-
         if(!empty($data)) {
             // check api-key
-            if (!empty($request->getHeader('api-key'))) {
+            if (!empty($request->getHeader('api-key')[0])) {
                 if($this->checkPassword($request->getHeader('api-key')[0], $data->getApiKey())) {
                     return true;
                 } else {
@@ -210,6 +209,8 @@ class MonitoringMiddleware implements MiddlewareInterface {
                 $this->logger->error("ERROR: request->getHeader(api-key) is a empty array.");
             }
         }
+
+        $this->logger->error("ERROR: authenticate - no DB entry!");
 
         return false;
     }
@@ -222,7 +223,7 @@ class MonitoringMiddleware implements MiddlewareInterface {
      */
     protected function checkToken(ServerRequestInterface $request): bool {
         // check if jwt-token is given
-        if (!empty($request->getHeader('Authorization'))) {
+        if (!empty($request->getHeader('Authorization')[0])) {
             $token = $request->getHeader('Authorization')[0];
 
             if(strpos($token, 'Bearer ') === 0) {
@@ -240,6 +241,8 @@ class MonitoringMiddleware implements MiddlewareInterface {
                 return Token::validate($rawToken, $this->secret);
             }
         }
+
+        // TODO: Log if no Authorization header is given
 
         return false;
     }
