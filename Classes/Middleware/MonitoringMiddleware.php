@@ -15,7 +15,8 @@ use TYPO3\CMS\Core\Http\JsonResponse;
 
 use \TYPO3\CMS\Core\Utility\GeneralUtility;
 use \ReallySimpleJWT\Token;
-use GroundStack\GsMonitorProvider\Helpers\EnviromentInfoHelper;
+use GroundStack\GsMonitorProvider\Helpers\EnvironmentInfoHelper;
+use GroundStack\GsMonitorProvider\Helpers\DatabaseInfoHelper;
 use GroundStack\GsMonitorProvider\Domain\Repository\DataRepository;
 
 /**
@@ -164,13 +165,22 @@ class MonitoringMiddleware implements MiddlewareInterface {
                 // check JWT-Token
                 // don't send the api-key again with the token!
                 if($this->checkToken($request)) {
-                    $params = json_encode(EnviromentInfoHelper::getVersionData());
-                    $data = $this->encryptData($params);
+                    $environmentInfo = EnvironmentInfoHelper::getVersionData();
+                    $databaseInfo = DatabaseInfoHelper::getDatabaseVersion();
+
+                    if (!empty($databaseInfo)) {
+                        $environmentInfo['runtime']['database']['version'] = $databaseInfo;
+                    }
+
+                    $params = [
+                        'environment' => $environmentInfo,
+                        'time' => $this->getTimeStamp()
+                    ];
+                    $data = $this->encryptData(json_encode($params));
 
                     if(empty($data) || $data == false) {
                         $this->errors[] = 'API-Key or Publik-Key missmatch!';
                         $this->status = 401;
-                        $this->status = 200;
                         break;
                     }
 
@@ -393,5 +403,16 @@ class MonitoringMiddleware implements MiddlewareInterface {
         }
 
         return false;
+    }
+
+    /**
+     * Returns current timestamp and timezone setting
+     * Example:
+     *
+     * @return string
+     */
+    public function getTimeStamp() {
+        $date = new \DateTime();
+        return $date->getTimestamp();
     }
 }

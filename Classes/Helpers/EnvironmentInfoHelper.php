@@ -4,9 +4,9 @@ namespace GroundStack\GsMonitorProvider\Helpers;
 
 // use \TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 use \TYPO3\CMS\Core\Utility\GeneralUtility;
+use \TYPO3\CMS\Core\Utility\VersionNumberUtility;
 
-class EnviromentInfoHelper {
-
+class EnvironmentInfoHelper {
     /**
      * Gets the version data as array. The array has a key `runtime` containing data about the
      * platform and framework, as well as a key `modules` where the installed extensions, including
@@ -14,7 +14,7 @@ class EnviromentInfoHelper {
      *
      * @return array
      */
-    static function getVersionData() {
+    static function getVersionData(): array {
         $objectManager = GeneralUtility::makeInstance('TYPO3\CMS\Extbase\Object\ObjectManager');
         $extensionListUtility = $objectManager->get('TYPO3\CMS\Extensionmanager\Utility\ListUtility');
 
@@ -22,6 +22,7 @@ class EnviromentInfoHelper {
         $extensions = $extensionListUtility->getAvailableExtensions();
         $extensionTer = $extensionListUtility->enrichExtensionsWithEmConfAndTerInformation($extensions);
         $t3Versions = self::getT3Versions();
+        $useComposer = self::usesComposer();
 
         // Platform data
         $result['runtime'] = [
@@ -30,6 +31,7 @@ class EnviromentInfoHelper {
             'framework' => 'typo3',
             'framework_installed_version' => $t3Versions[0],
             'framework_newest_version' => $t3Versions[1],
+            'composer' => $useComposer
         ];
 
         // Extension data
@@ -55,7 +57,7 @@ class EnviromentInfoHelper {
      *
      * @return array<string>
      */
-    static function getT3Versions() {
+    static function getT3Versions(): array {
         $versionInformationUrl = 'https://get.typo3.org/json';
         $versionInformationResult = GeneralUtility::getUrl($versionInformationUrl);
 
@@ -85,5 +87,22 @@ class EnviromentInfoHelper {
             TYPO3_version,
             $latest,
         ];
+    }
+
+    /**
+     * Will return true for an instance that uses composer or false if it isn't.
+     * We do a version comparison because versions older than TYPO3 v7 are not installable via Composer.
+     *
+     * @return bool
+     */
+    public static function usesComposer(): bool {
+        $currentTYPO3Version = VersionNumberUtility::convertVersionNumberToInteger(TYPO3_version);
+        $composer = false;
+
+        if ($currentTYPO3Version >= VersionNumberUtility::convertVersionNumberToInteger('7.0.0')) {
+            $composer = \TYPO3\CMS\Core\Core\Bootstrap::usesComposerClassLoading();
+        }
+
+        return $composer;
     }
 }
