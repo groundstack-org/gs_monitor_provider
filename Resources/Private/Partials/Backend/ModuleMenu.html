@@ -6,14 +6,14 @@
 <div class="menu menu-module" role="tabpanel">
     <ul class="nav nav-tabs t3js-tabs" role="tablist" id="tabs-tab" data-store-last-tab="1">
         <li role="presentation" class="t3js-tabmenu-item {f:if(condition: '{menuIndex} == index', then: 'active')}">
-            <f:be.link class="btn btn-default" route="web_GsMonitorProviderProvidermodule" parameters="{tx_gsmonitorprovider_web_gsmonitorproviderprovidermodule: {listType: 'index', action: 'index', controller: 'Backend\ProviderModule'}}">
+            <f:link.action action="index" additionalParams="{tx_gsmonitorprovider_web_gsmonitorproviderprovidermodule: {listType: 'index', action: 'index', controller: 'Backend\ProviderModule'}}">
                 Overview
-            </f:be.link>
+            </f:link.action>
         </li>
         <li role="presentation" class="t3js-tabmenu-item {f:if(condition: '{menuIndex} == addNewData', then: 'active')}">
-            <f:be.link class="btn btn-default" route="web_GsMonitorProviderProvidermodule" parameters="{tx_gsmonitorprovider_web_gsmonitorproviderprovidermodule: {listType: 'addNewData', action: 'addNewData', controller: 'Backend\ProviderModule'}}">
-                Insert New Domain
-            </f:be.link>
+            <f:link.action action="addNewData" additionalParams="{tx_gsmonitorprovider_web_gsmonitorproviderprovidermodule: {listType: 'addNewData', action: 'addNewData', controller: 'Backend\ProviderModule'}}">
+                Insert new entry
+            </f:link.action>
         </li>
     </ul>
 </div>

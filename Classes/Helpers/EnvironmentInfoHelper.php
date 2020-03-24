@@ -105,4 +105,18 @@ class EnvironmentInfoHelper {
 
         return $composer;
     }
+
+    /**
+     * currentVersionHigherThan
+     *
+     * @param string $version - e. g. 9.3 or 8.7
+     * @return bool
+     */
+    public static function currentVersionHigherThan(string $version): bool {
+        if (VersionNumberUtility::convertVersionNumberToInteger(TYPO3_branch) >= VersionNumberUtility::convertVersionNumberToInteger($version)) {
+            return true;
+        }
+
+        return false;
+    }
 }

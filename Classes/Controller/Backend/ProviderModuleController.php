@@ -8,9 +8,11 @@ use \TYPO3\CMS\Core\Utility\GeneralUtility;
 use \TYPO3\CMS\Core\Messaging\FlashMessage;
 
 use \TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
-use TYPO3\CMS\Core\Database\RelationHandler;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
+use \TYPO3\CMS\Core\Database\RelationHandler;
+use \TYPO3\CMS\Backend\Utility\BackendUtility;
 use \TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
+
+use GroundStack\GsMonitorProvider\Helpers\EnvironmentInfoHelper;
 use GroundStack\GsMonitorProvider\Domain\Repository\DataRepository;
 
 /***
@@ -82,6 +84,10 @@ class ProviderModuleController extends ActionController {
      */
     public function injectDataRepository(DataRepository $dataRepository) {
         $this->dataRepository = $dataRepository;
+    }
+
+    public function injectPersistenceManager(\TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager $persistenceManager) {
+        $this->persistenceManager = $persistenceManager;
     }
 
     /**
@@ -212,8 +218,18 @@ class ProviderModuleController extends ActionController {
      * @return string
      */
     public function createPassword(string $password): string {
-        $hashInstance = GeneralUtility::makeInstance(PasswordHashFactory::class)->getDefaultHashInstance('FE');
+        if (EnvironmentInfoHelper::currentVersionHigherThan('9.0')) {
+            $hashInstance = GeneralUtility::makeInstance(PasswordHashFactory::class)->getDefaultHashInstance('FE');
 
-        return $hashInstance->getHashedPassword($password);
+            return $hashInstance->getHashedPassword($password);
+        }
+
+        // TYPO3 below TYPO3 9.x
+        if (\TYPO3\CMS\Saltedpasswords\Utility\SaltedPasswordsUtility::isUsageEnabled('FE')) {
+            $objSalt = \TYPO3\CMS\Saltedpasswords\Salt\SaltFactory::getSaltingInstance(NULL);
+            if (is_object($objSalt)) {
+                return $objSalt->getHashedPassword($password);
+            }
+        }
     }
 }

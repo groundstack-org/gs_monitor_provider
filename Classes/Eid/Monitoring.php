@@ -7,14 +7,13 @@ use \TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 use \UnexpectedValueException;
 use \Psr\Http\Message\ResponseInterface;
 use \Psr\Http\Message\ServerRequestInterface;
-use \Psr\Http\Server\MiddlewareInterface;
 use \Psr\Http\Server\RequestHandlerInterface;
 use \TYPO3\CMS\Core\Http\Response;
-use TYPO3\CMS\Core\Http\HtmlResponse;
-use TYPO3\CMS\Core\Http\JsonResponse;
-
 use \TYPO3\CMS\Core\Utility\GeneralUtility;
+use \TYPO3\CMS\Core\Database\ConnectionPool;
+
 use \ReallySimpleJWT\Token;
+use GroundStack\GsMonitorProvider\Helpers\JsonResponse;
 use GroundStack\GsMonitorProvider\Helpers\EnvironmentInfoHelper;
 use GroundStack\GsMonitorProvider\Helpers\DatabaseInfoHelper;
 use GroundStack\GsMonitorProvider\Domain\Repository\DataRepository;
@@ -33,7 +32,7 @@ class Monitoring {
      *
      * @var Response
      */
-    protected $response = [];
+    protected $response;
 
     /**
      * errors
@@ -118,12 +117,11 @@ class Monitoring {
 
         $this->dataRepository = $objectManager->get('GroundStack\\GsMonitorProvider\\Domain\\Repository\\DataRepository');
 
-        $this->secret = $this->extensionConfiguration['jwt']['secret'];
+        $this->secret = $this->extensionConfiguration['jwt.secret'];
 
         // HtmlResponse($content, $status = 200, array $headers = [])
         // JsonResponse($data = [], $status = 200, array $headers = [], $encodingOptions)
         // return new JsonResponse(['test' => 'testing']);
-
         switch ($request->getMethod()) {
             case 'GET':
                 header('Content-Type: application/json; charset=UTF-8');
@@ -138,16 +136,18 @@ class Monitoring {
                 break;
         }
 
-        if(empty($this->errors)) {
-            header('Authorization: asdfadf');
+        // TODO error handling überarbeiten - bzw. abfrage api-key und token
+        // aktuell werden beide nach einander abgefragt = nicht gut!
+        // if(empty($this->errors)) {
+            // header('Authorization: asdfadf');
 
-            $data = $this->dataRepository->findAll()->getFirst();
-            $apiKey = $data->getApikey();
-            $apiKeyPlain = $request->getHeader('api-key')[0];
-            var_dump($data);
-            var_dump($apiKey);
-            echo "<br><br>";
-            var_dump($apiKeyPlain);
+            // $data = $this->dataRepository->findAll()->getFirst();
+            // $apiKey = $data->getApikey();
+            // $apiKeyPlain = $request->getHeader('api-key')[0];
+            // var_dump($data);
+            // var_dump($apiKey);
+            // echo "<br><br>";
+            // var_dump($apiKeyPlain);
             // var_dump($this->checkPassword($apiKey, $apiKeyPlain));
             // var_dump($data = $this->dataRepository->findAll()->getFirst());
             // var_dump($this->response);
@@ -156,11 +156,17 @@ class Monitoring {
             // var_dump($this->createJsonResponse());
             // var_dump($this->authenticate($request));
             // var_dump($request->getHeaders());
-            die();
+            // die();
 
-            // return new JsonResponse($this->response, $this->status, $this->headers);
-        }
+            // return $this->createJsonResponse($this->response);
+            return new JsonResponse($this->response, $this->status, $this->headers);
+        // }
+        // return $this->response;
+        // print_r($this->createJsonResponse($this->response));
+        // die();
+        // return $this->createJsonResponse($this->response);
 
+        // return $this->createJsonResponse($this->errors);
         // return new JsonResponse(json_encode($this->errors), $this->status, $this->headers);
     }
 
@@ -174,8 +180,8 @@ class Monitoring {
 
         switch ($this->extensionConfiguration['accessMethod']['value']) {
             case '1': // jwt-Token
-
                 // check API-Key
+
                 if ($this->authenticate($request)) {
                     header( 'Authorization: '.$this->generateToken() );
                     break;
@@ -225,13 +231,15 @@ class Monitoring {
      *
      */
     protected function authenticate($request): bool {
-        $data = $this->dataRepository->findAll()->getFirst();
-        if(!empty($data)) {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_gsmonitorprovider_domain_model_data');
+        $apiKey = $queryBuilder->select('apikey')->from('tx_gsmonitorprovider_domain_model_data')->execute()->fetchColumn(0);
+
+        if(!empty($apiKey)) {
             // check api-key
             $requestHeaders = getallheaders();
             if (!empty($requestHeaders['Api-Key'])) {
-                if(!empty($data->getApiKey())) {
-                    if($this->checkPassword($requestHeaders['Api-Key'], $data->getApiKey())) {
+                if(!empty($apiKey)) {
+                    if($this->checkPassword($requestHeaders['Api-Key'], $apiKey)) {
                         return true;
                     } else {
                         $this->logger->error("ERROR: API-Key wrong!");
@@ -257,27 +265,14 @@ class Monitoring {
 
         // check if jwt-token is given
         $requestHeaders = getallheaders();
-        var_dump($requestHeaders['Authorization']);
-        die();
 
         if (!empty($requestHeaders['Authorization'])) {
             $token = $requestHeaders['Authorization'];
-            var_dump('test');
-        die();
-
             if(strpos($token, 'Bearer ') === 0) {
                 // Validate Token
                 $rawToken = end(explode('Bearer ', $token));
-                // throw new Exception('Throwable TEST01 --- '. $rawToken);
 
-                $this->logger->error(
-                    'MonitoringMiddleware - processPostRequest()',
-                    [
-                        'jwt Token Validate' => Token::validate($rawToken, $this->secret)
-                    ]
-                );
-
-                return Token::validate($rawToken, $this->secret);
+                return Token::validate($rawToken, $this->secret['value']);
             }
         }
 
@@ -303,9 +298,8 @@ class Monitoring {
                 'email' => 'test@test.de'
             ]
         ];
-
         try {
-            $token = Token::customPayload($this->payload, $this->secret);
+            $token = Token::customPayload($this->payload, $this->secret['value']);
             return $token;
         } catch (UnexpectedValueException $e) {
             return $e;
@@ -319,8 +313,8 @@ class Monitoring {
      * @return array
      */
     public function encryptData($data): array {
-        $DBdata = $this->dataRepository->findAll()->getFirst();
-        $publicKey = $DBdata->getPublickey();
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_gsmonitorprovider_domain_model_data');
+        $publicKey = $queryBuilder->select('publickey')->from('tx_gsmonitorprovider_domain_model_data')->execute()->fetchColumn(0);
 
         if(!empty($publicKey)) {
             // Encrypt using the public key
@@ -432,60 +426,17 @@ class Monitoring {
      * @param int $statusCode
      * @return Response
      */
-    public function createJsonResponse(): Response {
+    public function createJsonResponse($content): Response {
         $response = (new Response())
             ->withStatus($this->status)
-            ->withHeader('Content-Type', 'application/json; charset=utf-8');
+            ->withHeader('Content-Type', 'application/json; charset=UTF-8');
 
-        if (!empty($this->response)) {
+        if (!empty($content)) {
             $options = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES;
-            $response->getBody()->write(json_encode($this->response ?: null, $options));
+            $response->getBody()->write(json_encode($content ?: null, $options));
             $response->getBody()->rewind();
-
         }
 
         return $response;
-    }
-
-    public function processTest($content, $conf) {
-        // Remove any output produced until now
-        ob_clean();
-
-        /** @var $logger \TYPO3\CMS\Core\Log\Logger */
-        $this->logger = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Log\LogManager::class)->getLogger(__CLASS__);
-
-        // config from ext_conf_template.txt
-        $objectManager = GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
-
-        /** @var \TYPO3\CMS\Extensionmanager\Utility\ConfigurationUtility $configurationUtility */
-        $configurationUtility = $objectManager->get('TYPO3\CMS\Extensionmanager\Utility\ConfigurationUtility');
-        $this->extensionConfiguration = $configurationUtility->getCurrentConfiguration('gs_monitor_provider');
-
-        $this->dataRepository = $objectManager->get('GroundStack\\GsMonitorProvider\\Domain\\Repository\\DataRepository');
-
-        $this->secret = $this->extensionConfiguration['jwt.secret']['value'];
-
-        // HtmlResponse($content, $status = 200, array $headers = [])
-        // JsonResponse($data = [], $status = 200, array $headers = [], $encodingOptions)
-        // return new JsonResponse(['test' => 'testing']);
-
-        switch ($_SERVER['REQUEST_METHOD']) {
-            case 'POST':
-                header('Content-Type: application/json; charset=UTF-8');
-                $this->processPostRequest($request);
-                break;
-            default:
-                return new HtmlResponse('Method not allowed', 405);
-                break;
-        }
-
-        if(empty($this->errors)) {
-            var_dump( $this->response );
-
-            // return new JsonResponse($this->response, $this->status, $this->headers);
-        }
-
-        // return new JsonResponse(json_encode($this->errors), $this->status, $this->headers);
-
     }
 }
