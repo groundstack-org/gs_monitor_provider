@@ -20,10 +20,10 @@ $EM_CONF['gs_monitor_provider'] = [
     'uploadfolder' => '0',
     'createDirs' => '',
     'clearCacheOnLoad' => 0,
-    'version' => '1.0.0',
+    'version' => '0.1.1',
     'constraints' => [
         'depends' => [
-            'typo3' => '8.7.0-10.3.0',
+            'typo3' => '8.7.0-10.4.9',
         ],
         'conflicts' => [],
         'suggests' => [],

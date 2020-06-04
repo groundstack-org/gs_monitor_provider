@@ -51,9 +51,9 @@ class ProviderModuleController extends ActionController {
     /**
      * extensionConfiguration
      *
-     * @var [type]
+     * @var array
      */
-    protected $extensionConfiguration;
+    protected $extensionConfiguration = [];
 
     /**
      * Backend Template Container
@@ -76,16 +76,22 @@ class ProviderModuleController extends ActionController {
         $this->view->assign('script', 'T3_THIS_LOCATION = ' . GeneralUtility::quoteJSvalue(rawurlencode(GeneralUtility::getIndpEnv('REQUEST_URI'))) . ";");
     }
 
-    public function __construct() {
-    }
-
     /**
+     * injectDataRepository
+     *
      * @param DataRepository $dataRepository
+     * @return void
      */
     public function injectDataRepository(DataRepository $dataRepository) {
         $this->dataRepository = $dataRepository;
     }
 
+    /**
+     * injectPersistenceManager
+     *
+     * @param \TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager $persistenceManager
+     * @return void
+     */
     public function injectPersistenceManager(\TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager $persistenceManager) {
         $this->persistenceManager = $persistenceManager;
     }
